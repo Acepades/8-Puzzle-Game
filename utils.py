@@ -37,11 +37,12 @@ def get_possible_states(state, empty_value=0):
     return (change_state(state, action, empty_value) for action in possible_actions)
 
 def breadth_first_shortest_path(start_state, final_state):
+    initial_path = [start_state]
+
     if start_state == final_state:
-        return [start_state]
+        return initial_path
     
     visited_states = set()
-    initial_path = [start_state]
     queue = Queue()
     queue.put(initial_path)
     
@@ -83,7 +84,7 @@ def generate_random_solvable_puzzle():
             return state
 
 if __name__ == '__main__':
-    start_state = [8, 6, 7, 2, 5, 4, 3, 0, 1]    # one of the most difficult puzzle instance with 31 moves
+    start_state = [8, 6, 7, 2, 5, 4, 3, 0, 1]    # one of the most difficult puzzle instances with 31 moves
     final_state = [1, 2, 3, 4, 5, 6, 7, 8, 0]
     
     start = time()
