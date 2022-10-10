@@ -20,7 +20,7 @@ class App(tk.Tk):
         self.container.pack(side='top', fill='both', expand=True)
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
-
+        
         self.show_frame(PuzzlePage, **BASIC_FRAME_PROPERTIES)
     
     def show_frame(self, page, *args, **kwargs):
@@ -33,34 +33,34 @@ class PuzzlePage(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.controller = controller
-
+        
         self.display_widgets()
     
     def display_widgets(self):
         self.frame_title = tk.Frame(self, **BASIC_FRAME_PROPERTIES)
         self.frame_title.pack(pady=25)
-
+        
         self.label_heading = tk.Label(self.frame_title, **HEADING_LABEL_PROPERTIES)
         self.label_heading.pack()
-
+        
         self.label_subheading = tk.Label(self.frame_title, **SUBHEADING_LABEL_PROPERTIES)
         self.label_subheading.pack()
-
+        
         self.frame_puzzle = Puzzle(self, **BASIC_FRAME_PROPERTIES)
         self.frame_puzzle.pack(padx=10, pady=10)
-
+        
         self.frame_buttons = tk.Frame(self, **BASIC_FRAME_PROPERTIES)
         self.frame_buttons.pack(pady=20)
-
+        
         self.button_solve = tk.Button(self.frame_buttons, text='solve', command=lambda: self.frame_puzzle.solve_board(), **PRIMARY_BUTTON_PROPERTIES)
         self.button_solve.grid(row=0, column=0, padx=10, pady=10)
-
+        
         self.button_stop = tk.Button(self.frame_buttons, text='stop', command=lambda: self.frame_puzzle.stop_solution(), **SECONDARY_BUTTON_PROPERTIES)
         self.button_stop.grid(row=0, column=1, padx=10, pady=10)
-
+        
         self.button_shuffle = tk.Button(self.frame_buttons, text='shuffle', command=lambda: self.frame_puzzle.shuffle_board(), **PRIMARY_BUTTON_PROPERTIES)
         self.button_shuffle.grid(row=0, column=2, padx=10, pady=10)
-
+        
         self.button_reset = tk.Button(self.frame_buttons, text='reset', command=lambda: self.frame_puzzle.reset_board(), **SECONDARY_BUTTON_PROPERTIES)
         self.button_reset.grid(row=0, column=3, padx=10, pady=10)
 
@@ -79,19 +79,19 @@ class Puzzle(tk.Frame):
         self.is_stopped = False
         self.is_solving = False
         self.is_done = False
-
+        
         self.display_widgets()
     
     def display_widgets(self):
         self.label_moves = tk.Label(self, text=f'Moves: {self.moves}', **TEXT_LABEL_PROPERTIES)
         self.label_moves.grid(row=0, column=0, sticky='w', padx=10, pady=5)
-
+        
         self.label_status = tk.Label(self, text=f'Playing...', **TEXT_LABEL_PROPERTIES)
         self.label_status.grid(row=0, column=1, sticky='e', padx=10, pady=5)
-
+        
         self.separator = ttk.Separator(self, orient='horizontal')
         self.separator.grid(row=1, columnspan=2, sticky='we', pady=10)
-
+        
         self.frame_board = tk.Frame(self, **BASIC_FRAME_PROPERTIES)
         self.frame_board.grid(row=2, columnspan=2)
         
@@ -119,7 +119,7 @@ class Puzzle(tk.Frame):
                 self.current_board_state[i*3 + j] = state[index]
                 index += 1
     
-    def set_state(self, state, speed):
+    def set_state(self, state, delay_time):
         current_row, current_col = self.get_board_coordinate(self.current_board_state.index(0))
         new_row, new_col = self.get_board_coordinate(state.index(0))
         
@@ -133,7 +133,7 @@ class Puzzle(tk.Frame):
         if not self.is_done:
             self.update_moves(self.moves + 1)
         
-        sleep(speed)
+        sleep(delay_time)
     
     def get_board_coordinate(self, index):
         return index // 3, index % 3
@@ -153,7 +153,6 @@ class Puzzle(tk.Frame):
     
     def reset_board(self):
         self.stop_solution()
-        sleep(0.5)
         self.is_stopped = False
         self.is_solving = False
         self.is_done = False
@@ -174,15 +173,16 @@ class Puzzle(tk.Frame):
     def stop_solution(self):
         self.is_stopped = True
         self.is_solving = False
+        sleep(0.75)
     
     def run_solution(self):
         self.is_solving = True
         self.update_status('Solving...')
-
+        
         print('Finding solution...')
         
         start = time()
-        solution = breadth_first_shortest_path(self.current_board_state, self.target_board_state)
+        solution = breadth_first_shortest_path(self.current_board_state, self.target_board_state, self)
         end = time()
         
         if not self.is_stopped:
@@ -191,14 +191,19 @@ class Puzzle(tk.Frame):
             print('Stopped')
         
         if solution != None and not self.is_stopped:
+            print('Moving board...')
             self.update_status('Moving...')
+            
             delay_time = 0.75
             sleep(delay_time)
+            
             for move in solution[1:]:
                 if self.is_stopped:
+                    print('Stopped')
                     self.update_status('Playing...')
                     break
-                self.set_state(move, delay_time)
+                else:
+                    self.set_state(move, delay_time)
             else:
                 self.update_status('Solved!')
                 self.is_done = True
