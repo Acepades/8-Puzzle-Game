@@ -19,7 +19,7 @@ def change_state(state, action, empty_value=0):
 
 def get_possible_actions(state, empty_value=0):
     index = state.index(empty_value)
-
+    
     if index >= 3:
         yield 'U'
     
@@ -28,7 +28,7 @@ def get_possible_actions(state, empty_value=0):
     
     if index % 3 > 0:
         yield 'L'
-
+    
     if index % 3 < 2:
         yield 'R'
 
@@ -36,9 +36,9 @@ def get_possible_states(state, empty_value=0):
     possible_actions = get_possible_actions(state)
     return (change_state(state, action, empty_value) for action in possible_actions)
 
-def breadth_first_shortest_path(start_state, final_state):
+def breadth_first_shortest_path(start_state, final_state, controller=None):
     initial_path = [start_state]
-
+    
     if start_state == final_state:
         return initial_path
     
@@ -47,16 +47,20 @@ def breadth_first_shortest_path(start_state, final_state):
     queue.put(initial_path)
     
     while queue:
+        if controller:
+            if controller.is_stopped:
+                break
+        
         path = queue.get()
         state = path[-1]
-
+        
         if not str(state) in visited_states:
             visited_states.add(str(state))
             neighboring_states = get_possible_states(state)
-
+            
             for neighbor in neighboring_states:
                 new_path = path + [neighbor]
-
+                
                 if neighbor == final_state:
                     return new_path
                 
@@ -90,7 +94,7 @@ if __name__ == '__main__':
     start = time()
     solution = breadth_first_shortest_path(start_state, final_state)
     end = time()
-
+     
     print('Solution:')
     for count, state in enumerate(solution, 1):
         print(f'{count:02d} {state}')
