@@ -154,7 +154,6 @@ class Puzzle(tk.Frame):
     def reset_board(self):
         self.stop_solution()
         self.is_stopped = False
-        self.is_solving = False
         self.is_done = False
         self.update_moves(0)
         self.update_status('Playing...')
@@ -179,7 +178,7 @@ class Puzzle(tk.Frame):
         self.is_solving = True
         self.update_status('Solving...')
         
-        print('Finding solution...')
+        print('\nFinding solution...')
         
         start = time()
         solution = breadth_first_shortest_path(self.current_board_state, self.target_board_state, self)
@@ -191,7 +190,7 @@ class Puzzle(tk.Frame):
             print('Stopped')
         
         if solution != None and not self.is_stopped:
-            print('Moving board...')
+            print('\nMoving board...')
             self.update_status('Moving...')
             
             delay_time = 0.75
@@ -205,6 +204,7 @@ class Puzzle(tk.Frame):
                 else:
                     self.set_state(move, delay_time)
             else:
+                print('Done animation')
                 self.update_status('Solved!')
                 self.is_done = True
             self.is_solving = False
