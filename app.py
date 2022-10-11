@@ -70,7 +70,7 @@ class Puzzle(tk.Frame):
         self.parent = parent
         
         self.moves = 0
-        self.board = [[], [], []]
+        self.board = []
         self.saved_board_state = list(range(9))
         self.current_board_state = list(range(9))
         self.target_board_state = list(range(9))
@@ -90,43 +90,46 @@ class Puzzle(tk.Frame):
         self.label_status.grid(row=0, column=1, sticky='e', padx=10, pady=5)
         
         self.separator = ttk.Separator(self, orient='horizontal')
-        self.separator.grid(row=1, columnspan=2, sticky='we', pady=10)
+        self.separator.grid(row=1, columnspan=2, sticky='ew', pady=10)
         
         self.frame_board = tk.Frame(self, **BASIC_FRAME_PROPERTIES)
         self.frame_board.grid(row=2, columnspan=2)
         
-        for row in range(3):
-            for column in range(3):
-                self.board[row].append(tk.Button(self.frame_board, **TILES_BUTTON_PROPERTIES))
-                self.board[row][column].grid(row=row, column=column, padx=10, pady=10)
+        self.initialize_board()
         
         self.shuffle_board()
     
-    def generate_board(self, state, empty_value=0):
-        index = 0
-        for i in range(3):
-            for j in range(3):
-                self.board[i][j].configure(
-                    image=self.tile_images[state[index]],
-                    text=state[index],
-                    state='normal',
-                    command=lambda x=i, y=j: self.swap_click(x, y)
-                )
-                
-                if state[index] == empty_value:
-                    self.board[i][j].configure(state='disabled')
-                
-                self.current_board_state[i*3 + j] = state[index]
-                index += 1
+    def initialize_board(self):
+        for index in range(9):
+            self.board.append(tk.Button(self.frame_board, **TILE_BUTTON_PROPERTIES))
+            self.board[index].grid(row=index // 3, column=index % 3, padx=10, pady=10)
     
-    def set_state(self, state, delay_time):
-        current_row, current_col = self.get_board_coordinate(self.current_board_state.index(0))
-        new_row, new_col = self.get_board_coordinate(state.index(0))
+    def populate_board(self, state, empty_value=0):
+        for tile_index, tile_value in enumerate(state):
+            self.board[tile_index].configure(
+                    image=self.tile_images[tile_value],
+                    text=tile_value,
+                    state='normal',
+                    command=lambda tile_index=tile_index: self.swap_click(tile_index, empty_value)
+                )
+            
+            if tile_value == empty_value:
+                self.board[tile_index].configure(state='disabled')
+            
+            self.current_board_state[tile_index] = tile_value
+    
+    def set_state(self, state, delay_time=0, empty_value=0):
+        current_index = self.current_board_state.index(empty_value)
+        new_index = state.index(empty_value)
         
-        tile_1, tile_2 = self.board[current_row][current_col], self.board[new_row][new_col]
-        tile_1_prop, tile_2_prop = self.get_tile_property(tile_1), self.get_tile_property(tile_2)
-        self.set_tile_property(tile_2_prop, tile_1)
-        self.set_tile_property(tile_1_prop, tile_2)
+        first_tile = self.board[current_index]
+        second_tile = self.board[new_index]
+        
+        first_tile_properties = self.get_tile_property(first_tile)
+        second_tile_properties = self.get_tile_property(second_tile)
+        
+        self.set_tile_property(first_tile, second_tile_properties)
+        self.set_tile_property(second_tile, first_tile_properties)
         
         self.current_board_state = state[:]
         
@@ -135,14 +138,16 @@ class Puzzle(tk.Frame):
         
         sleep(delay_time)
     
-    def get_board_coordinate(self, index):
-        return index // 3, index % 3
-    
     def get_tile_property(self, tile):
-        return tile.cget('text'), tile.cget('background'), tile.cget('state'), tile.cget('image')
+        return {
+            'text': tile.cget('text'),
+            'background': tile.cget('background'),
+            'image': tile.cget('image'),
+            'state': tile.cget('state')
+        }
     
-    def set_tile_property(self, properties, tile):
-        tile.configure(text=properties[0], background=properties[1], state=properties[2], image=properties[3])
+    def set_tile_property(self, tile, properties):
+        tile.configure(**properties)
     
     def update_moves(self, moves):
         self.moves = moves
@@ -157,10 +162,10 @@ class Puzzle(tk.Frame):
         self.is_done = False
         self.update_moves(0)
         self.update_status('Playing...')
-        self.generate_board(state=self.saved_board_state)
+        self.populate_board(state=self.saved_board_state)
     
     def shuffle_board(self):
-        self.saved_board_state = generate_random_solvable_puzzle()
+        self.saved_board_state = get_random_solvable_state()
         self.reset_board()
     
     def solve_board(self):
@@ -170,9 +175,10 @@ class Puzzle(tk.Frame):
             self.solution_thread.start()
     
     def stop_solution(self):
-        self.is_stopped = True
-        self.is_solving = False
-        sleep(0.75)
+        if self.is_solving and not self.is_stopped:
+            self.is_stopped = True
+            self.is_solving = False
+            sleep(0.75)
     
     def run_solution(self):
         self.is_solving = True
@@ -181,7 +187,7 @@ class Puzzle(tk.Frame):
         print('\nFinding solution...')
         
         start = time()
-        solution = breadth_first_shortest_path(self.current_board_state, self.target_board_state, self)
+        solution = get_breadth_first_shortest_path(self.current_board_state, self.target_board_state, self)
         end = time()
         
         if not self.is_stopped:
@@ -212,26 +218,24 @@ class Puzzle(tk.Frame):
             self.update_status('Playing...')
             self.is_solving = False
     
-    def swap_click(self, x, y):
+    def swap_click(self, tile_index, empty_value=0):
         possible_actions = get_possible_actions(self.current_board_state)
-        board_state_index = self.current_board_state.index(0)
-        tile_number = int(self.board[x][y].cget('text'))
+        empty_value_index = self.current_board_state.index(empty_value)
+        tile_value = int(self.board[tile_index].cget('text'))
         
         for action in possible_actions:
             if not self.is_solving and not self.is_done:
-                state = None
+                if action == UP and self.current_board_state[empty_value_index - 3] == tile_value:
+                    self.set_state(get_transformed_state(self.current_board_state, UP))
                 
-                if action == 'U' and self.current_board_state[board_state_index - 3] == tile_number:
-                    state = change_state(self.current_board_state, 'U')
-                elif action == 'D' and self.current_board_state[board_state_index + 3] == tile_number:
-                    state = change_state(self.current_board_state, 'D')
-                elif action == 'L' and self.current_board_state[board_state_index - 1] == tile_number:
-                    state = change_state(self.current_board_state, 'L')
-                elif action == 'R' and self.current_board_state[board_state_index + 1] == tile_number:
-                    state = change_state(self.current_board_state, 'R')
+                elif action == DOWN and self.current_board_state[empty_value_index + 3] == tile_value:
+                    self.set_state(get_transformed_state(self.current_board_state, DOWN))
                 
-                if state:
-                    self.set_state(state, 0)
+                elif action == LEFT and self.current_board_state[empty_value_index - 1] == tile_value:
+                    self.set_state(get_transformed_state(self.current_board_state, LEFT))
+                
+                elif action == RIGHT and self.current_board_state[empty_value_index + 1] == tile_value:
+                    self.set_state(get_transformed_state(self.current_board_state, RIGHT))
         
         if not self.is_done and self.current_board_state == self.target_board_state:
             self.update_status('Well done!')
