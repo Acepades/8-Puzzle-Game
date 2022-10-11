@@ -1,3 +1,10 @@
+# Constants
+
+UP = 'U'
+DOWN = 'D'
+LEFT = 'L'
+RIGHT = 'R'
+
 # Colors
 
 BLACK = '#23272a'
@@ -54,7 +61,7 @@ SECONDARY_BUTTON_PROPERTIES = {
     'relief': 'raised'
 }
 
-TILES_BUTTON_PROPERTIES = {
+TILE_BUTTON_PROPERTIES = {
     'background': BLACK,
     'foreground': BLACK,
     'activebackground': BLACK,
