@@ -2,41 +2,46 @@ from queue import Queue
 from random import shuffle
 from time import time
 
-def change_state(state, action, empty_value=0):
+from config import UP, DOWN, LEFT, RIGHT
+
+def get_transformed_state(state, action, empty_value=0):
     index = state.index(empty_value)
-    temp = state[:]
+    new_state = state[:]
     
-    if action == 'U':
-        temp[index], temp[index - 3] = temp[index - 3], temp[index]
-    elif action == 'D':
-        temp[index], temp[index + 3] = temp[index + 3], temp[index]
-    elif action == 'L':
-        temp[index], temp[index - 1] = temp[index - 1], temp[index]
-    elif action == 'R':
-        temp[index], temp[index + 1] = temp[index + 1], temp[index]
+    if action == UP:
+        new_state[index], new_state[index - 3] = new_state[index - 3], new_state[index]
     
-    return temp
+    elif action == DOWN:
+        new_state[index], new_state[index + 3] = new_state[index + 3], new_state[index]
+    
+    elif action == LEFT:
+        new_state[index], new_state[index - 1] = new_state[index - 1], new_state[index]
+    
+    elif action == RIGHT:
+        new_state[index], new_state[index + 1] = new_state[index + 1], new_state[index]
+    
+    return new_state
 
 def get_possible_actions(state, empty_value=0):
     index = state.index(empty_value)
     
     if index >= 3:
-        yield 'U'
+        yield UP
     
     if index <= 5:
-        yield 'D'
+        yield DOWN
     
     if index % 3 > 0:
-        yield 'L'
+        yield LEFT
     
     if index % 3 < 2:
-        yield 'R'
+        yield RIGHT
 
 def get_possible_states(state, empty_value=0):
     possible_actions = get_possible_actions(state)
-    return (change_state(state, action, empty_value) for action in possible_actions)
+    return (get_transformed_state(state, action, empty_value) for action in possible_actions)
 
-def breadth_first_shortest_path(start_state, final_state, controller=None):
+def get_breadth_first_shortest_path(start_state, final_state, controller=None):
     initial_path = [start_state]
     
     if start_state == final_state:
@@ -80,7 +85,7 @@ def is_solvable(state):
     inversion_count = get_inversion_count(state)
     return inversion_count % 2 == 0
 
-def generate_random_solvable_puzzle():
+def get_random_solvable_state():
     state = list(range(9))
     while True:
         shuffle(state)
@@ -92,7 +97,7 @@ if __name__ == '__main__':
     final_state = [1, 2, 3, 4, 5, 6, 7, 8, 0]
     
     start = time()
-    solution = breadth_first_shortest_path(start_state, final_state)
+    solution = get_breadth_first_shortest_path(start_state, final_state)
     end = time()
      
     print('Solution:')
