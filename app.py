@@ -158,8 +158,6 @@ class Puzzle(tk.Frame):
     
     def reset_board(self):
         self.stop_solution()
-        self.is_stopped = False
-        self.is_done = False
         self.update_moves(0)
         self.update_status('Playing...')
         self.populate_board(state=self.saved_board_state)
@@ -177,11 +175,11 @@ class Puzzle(tk.Frame):
     def stop_solution(self):
         if self.is_solving and not self.is_stopped:
             self.is_stopped = True
-            self.is_solving = False
-            sleep(0.75)
     
     def run_solution(self):
+        self.is_stopped = False
         self.is_solving = True
+        self.is_done = False
         self.update_status('Solving...')
         
         print('\nFinding solution...')
@@ -195,7 +193,7 @@ class Puzzle(tk.Frame):
         else:
             print('Stopped')
         
-        if solution != None and not self.is_stopped:
+        if solution:
             print('\nMoving board...')
             self.update_status('Moving...')
             
@@ -210,13 +208,14 @@ class Puzzle(tk.Frame):
                 else:
                     self.set_state(move, delay_time)
             else:
-                print('Done animation')
+                print('Done board animation')
                 self.update_status('Solved!')
                 self.is_done = True
+            
             self.is_solving = False
         else:
-            self.update_status('Playing...')
             self.is_solving = False
+            self.update_status('Playing...')
     
     def swap_click(self, tile_index, empty_value=0):
         possible_actions = get_possible_actions(self.current_board_state)
