@@ -1,4 +1,4 @@
-from queue import Queue
+from collections import deque
 from random import shuffle
 from time import time
 
@@ -48,15 +48,15 @@ def get_breadth_first_shortest_path(start_state, final_state, controller=None):
         return initial_path
     
     visited_states = set()
-    queue = Queue()
-    queue.put(initial_path)
+    queue = deque()
+    queue.append(initial_path)
     
     while queue:
         if controller:
             if controller.is_stopped:
                 break
         
-        path = queue.get()
+        path = queue.popleft()
         state = path[-1]
         
         if not str(state) in visited_states:
@@ -69,7 +69,7 @@ def get_breadth_first_shortest_path(start_state, final_state, controller=None):
                 if neighbor == final_state:
                     return new_path
                 
-                queue.put(new_path)
+                queue.append(new_path)
     
     return None
 
