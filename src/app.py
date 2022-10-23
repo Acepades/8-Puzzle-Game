@@ -258,5 +258,5 @@ class PuzzlePage(tk.Frame):
         self.label_status.configure(text=status)
 
 if __name__ == '__main__':
-    app = App()
+    app = EightPuzzle()
     app.mainloop()
