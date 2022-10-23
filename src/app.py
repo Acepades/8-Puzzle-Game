@@ -256,7 +256,3 @@ class PuzzlePage(tk.Frame):
     
     def update_status(self, status):
         self.label_status.configure(text=status)
-
-if __name__ == '__main__':
-    app = EightPuzzle()
-    app.mainloop()
