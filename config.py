@@ -1,33 +1,25 @@
-# Constants
-
-UP = 'U'
-DOWN = 'D'
-LEFT = 'L'
-RIGHT = 'R'
-
-# Colors
+# colors
 
 BLACK = '#23272a'
 WHITE = '#ffffff'
+GREY = '#2c2f33'
 PURPLE = '#4e5d94'
 RED = '#f04747'
-GREY = '#2c2f33'
+YELLOW = '#faa61a'
 
-# Widget Properties
+# widget properties
 
 BASIC_FRAME_PROPERTIES = {
     'background': BLACK
 }
 
 HEADING_LABEL_PROPERTIES = {
-    'text': '8-Puzzle Game',
     'font': ('Tw Cen MT', 50, 'bold'),
     'background': BLACK,
     'foreground': WHITE
 }
 
 SUBHEADING_LABEL_PROPERTIES = {
-    'text': 'solved using bfs algorithm',
     'font': ('Nunito', 15, 'italic'),
     'background': BLACK,
     'foreground': WHITE
@@ -53,6 +45,17 @@ PRIMARY_BUTTON_PROPERTIES = {
 SECONDARY_BUTTON_PROPERTIES = {
     'font': ('Tw Cen MT Condensed', 18, 'bold'),
     'background': RED,
+    'foreground': WHITE,
+    'activebackground': GREY,
+    'activeforeground': WHITE,
+    'width': 8,
+    'border': 0,
+    'relief': 'raised'
+}
+
+TERTIARY_BUTTON_PROPERTIES = {
+    'font': ('Tw Cen MT Condensed', 18, 'bold'),
+    'background': YELLOW,
     'foreground': WHITE,
     'activebackground': GREY,
     'activeforeground': WHITE,
