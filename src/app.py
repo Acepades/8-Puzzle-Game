@@ -5,16 +5,16 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 from threading import Thread
 
-from config import *
-from utils import algorithm, Board, A_STAR, BFS
+from src.config import *
+from src.utils import algorithm, Board, A_STAR, BFS
 
-class App(tk.Tk):
+class EightPuzzle(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title('8-Puzzle Game')
         self.geometry('750x750')
         self.resizable(False, False)
-        self.iconbitmap('assets/images/app.ico')
+        self.iconbitmap('src/assets/images/app.ico')
         self.protocol('WM_DELETE_WINDOW', lambda: os._exit(0))
         
         self.container = tk.Frame(self)
@@ -49,7 +49,7 @@ class PuzzlePage(tk.Frame):
         self.goal_board_state = tuple(range(9))
         self.saved_board_state = tuple(range(9))
         
-        self.tile_images = [ImageTk.PhotoImage(Image.open(f'assets/images/tile_{n}.png')) for n in range(9)]
+        self.tile_images = [ImageTk.PhotoImage(Image.open(f'src/assets/images/tile_{n}.png')) for n in range(9)]
         
         self.is_stopped = False
         self.is_solving = False
