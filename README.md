@@ -6,7 +6,7 @@ An implementation of the 1-player board game 8-Puzzle using Python Tkinter
 ## Description ##
 
 The goal of this project was to create the board game of 8-puzzle using
-artificial intelligent (AI). The board is solved using Breadth-first Search (BFS)
+artificial intelligence (AI). The board is solved using Breadth-first Search (BFS)
 and A* search algorithm with Manhattan Distance as the heuristic function.
 
 ## Dependencies ##
