@@ -8,14 +8,17 @@ algorithm = namedtuple('Algorithm', ['name', 'func'])
 class Board:
     @staticmethod
     def translate_to_2D(index):
+        """Returns a tuple of 2D coordinate equivalent"""
         return index // 3, index % 3
     
     @staticmethod
     def manhattan_distance(x1, y1, x2, y2):
+        """Returns a manhattan distance between two points"""
         return abs(x1 - x2) + abs(y1 - y2)
     
     @staticmethod
     def valid_actions(state):
+        """Generates valid actions of a given state"""
         blank_index = state.index(0)
         if blank_index > 2:
             yield 'U'
@@ -28,6 +31,7 @@ class Board:
     
     @staticmethod
     def transform(state, action):
+        """Returns a new instance of a state when an action is applied"""
         state = [*state]
         blank_index = state.index(0)
         match action:
@@ -43,6 +47,7 @@ class Board:
     
     @staticmethod
     def inversions(state):
+        """Returns the inversion sum of a state"""
         inversion_sum = 0
         for i in range(9):
             for j in range(i + 1, 9):
@@ -52,10 +57,12 @@ class Board:
     
     @staticmethod
     def is_solvable(state):
+        """Checks if a state is solvable or not"""
         return Board.inversions(state) % 2 == 0
     
     @staticmethod
     def create_solvable_state():
+        """Returns a random solvable state"""
         state = [*range(9)]
         while True:
             random.shuffle(state)
@@ -64,6 +71,7 @@ class Board:
     
     @staticmethod
     def solve(state, func):
+        """Returns the solution of a state given a search algorithm"""
         board_node = BoardNode(state)
         
         start_time = time.time()
@@ -77,6 +85,7 @@ class Board:
     
     @staticmethod
     def draw(state):
+        """Returns a string representation of a state"""
         return '{} {} {}\n{} {} {}\n{} {} {}'.format(*state)
 
 class Node:
@@ -86,9 +95,11 @@ class Node:
         self.nodes = []
     
     def add_node(self, node):
+        """Adds new node to the children of the current node"""
         self.nodes.append(node)
     
     def iterate_ancestors(self):
+        """Generates the ancestor nodes of the current node"""
         curr_node = self
         while curr_node:
             yield curr_node
@@ -103,6 +114,7 @@ class BoardNode(Node):
         self.heuristic_func = Board.manhattan_distance
     
     def cost(self):
+        """Returns the heuristic cost of the state"""
         heuristic_sum = 0
         for index, item in enumerate(self.state):
             curr_x, curr_y = Board.translate_to_2D(index)
@@ -111,6 +123,7 @@ class BoardNode(Node):
         return heuristic_sum + self.depth
     
     def expand(self):
+        """Expand valid actions as the children of the current state"""
         if not self.nodes:
             for action in Board.valid_actions(self.state):
                 self.add_node(BoardNode(
@@ -121,24 +134,31 @@ class BoardNode(Node):
                     ))
     
     def actions(self):
+        """Returns all the action of the ancestor states"""
         return tuple(node.action for node in self.iterate_ancestors())[-2::-1]
     
     def is_goal(self):
+        """Checks if current state is equal to the goal state"""
         return self.state == self.goal
     
     def __lt__(self, other):
+        """Checks if cost of current state is less than the cost of the other state"""
         return self.cost() < other.cost()
     
     def __eq__(self, other):
+        """Checks if cost of current state is equal to the cost of the other state"""
         return self.cost() == other.cost()
     
     def __str__(self):
+        """Returns the string representation of the state"""
         return Board.draw(self.state)
     
     def __repr__(self):
+        """Returns the actual representation of the state"""
         return f'Board(state={self.state}, action={self.action}, depth={self.depth})'
 
 def A_STAR(start_node):
+    """Returns the goal node"""
     frontier = []
     explored_nodes = set()
     nodes_expanded = 0
@@ -166,8 +186,8 @@ def A_STAR(start_node):
     
     return None
 
-
 def BFS(start_node):
+    """Returns the goal node"""
     frontier = deque()
     explored_nodes = set()
     nodes_expanded = 0
