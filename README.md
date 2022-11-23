@@ -25,4 +25,4 @@ button to reset the board, 'shuffle' button to shuffle the board, and
 
 ## Reference ##
 Kunkle D. (2001, October 8). [Solving the 8 Puzzle in a Minimum Number of Moves: An Application
-of the A* Algorithm](https://web.mit.edu/6.034/wwwbob/EightPuzzle.pdf)
+of the A* Algorithm](https://web.mit.edu/6.034/wwwbob/EightPuzzle.pdf).
