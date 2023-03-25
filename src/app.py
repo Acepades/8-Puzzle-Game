@@ -103,6 +103,11 @@ class PuzzlePage(tk.Frame):
         self.initialize_board()
         
         self.shuffle_board()
+        
+        self.controller.bind('<Up>', lambda event: self.transform_keys('D'))
+        self.controller.bind('<Down>', lambda event: self.transform_keys('U'))
+        self.controller.bind('<Left>', lambda event: self.transform_keys('R'))
+        self.controller.bind('<Right>', lambda event: self.transform_keys('L'))
     
     def initialize_board(self):
         for index in range(9):
@@ -212,6 +217,15 @@ class PuzzlePage(tk.Frame):
                 
                 elif action == 'R' and self.current_board_state[blank_index + 1] == tile_value:
                      self.transform_state(action)
+        
+        if not self.is_done and self.current_board_state == self.goal_board_state:
+            self.update_status('Well done!')
+            self.is_done = True
+    
+    def transform_keys(self, action):
+        if not self.is_solving and not self.is_done:
+           if action in Board.valid_actions(self.current_board_state):
+                self.transform_state(action)
         
         if not self.is_done and self.current_board_state == self.goal_board_state:
             self.update_status('Well done!')
