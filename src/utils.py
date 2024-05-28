@@ -73,19 +73,19 @@ class Board:
     def solve(state, func):
         """Returns the solution of a state given a search algorithm"""
         board_node = BoardNode(state)
-        
+
         start_time = time.time()
-        final_node, nodes_expanded, max_search_depth = func(board_node)
+        final_node, nodes_expanded, distance_traversee_max = func(board_node)
         final_time = time.time()
-        
+
         path_to_goal = final_node.actions()
         time_elasped = final_time - start_time
-        
-        return path_to_goal, nodes_expanded, max_search_depth, time_elasped
-    
+
+        return path_to_goal, nodes_expanded, distance_traversee_max, time_elasped
+
     @staticmethod
     def draw(state):
-        """Returns a string representation of a state"""
+        """affichage par chaines"""
         return '{} {} {}\n{} {} {}\n{} {} {}'.format(*state)
 
 class Node:
@@ -93,13 +93,13 @@ class Node:
         self.parent = parent
         self.depth = depth
         self.nodes = []
-    
-    def add_node(self, node):
-        """Adds new node to the children of the current node"""
+
+    def ajouter_node(self, node):
+        """ajouts des nodes au fils des nodes fils"""
         self.nodes.append(node)
-    
-    def iterate_ancestors(self):
-        """Generates the ancestor nodes of the current node"""
+
+    def iterer_precedeurs(self):
+        """generation des precedents"""
         curr_node = self
         while curr_node:
             yield curr_node
@@ -110,129 +110,177 @@ class BoardNode(Node):
         super().__init__(parent, depth)
         self.state = state
         self.action = action
-        self.goal = tuple(range(9)) #(1, 2, 3, 4, 5, 6, 7, 8, 0)
-        self.heuristic_func = Board.manhattan_distance
-    
+        self.goal = (1, 2, 3, 4, 5, 6, 7, 8, 0)
+        self.fonct_heuristique = Board.manhattan_distance
+
     def cost(self):
-        """Returns the heuristic cost of the state"""
-        heuristic_sum = 0
+        """calcul de h(n) et f(n)"""
+        somme_heuristique = 0
         for index, item in enumerate(self.state):
             curr_x, curr_y = Board.translate_to_2D(index)
             goal_x, goal_y = Board.translate_to_2D(self.goal.index(item))
-            heuristic_sum += self.heuristic_func(curr_x, curr_y, goal_x, goal_y)
-        return heuristic_sum + self.depth
-    
+            somme_heuristique += self.fonct_heuristique(curr_x, curr_y, goal_x, goal_y)
+        if Board.algo_utilisee == "F":
+            return somme_heuristique + self.depth
+        else:
+            return somme_heuristique
+
     def expand(self):
-        """Expand valid actions as the children of the current state"""
+        """Expantion"""
         if not self.nodes:
             for action in Board.valid_actions(self.state):
-                self.add_node(BoardNode(
+                self.ajouter_node(BoardNode(
                     Board.transform(self.state, action),
                     parent=self,
                     action=action,
                     depth=self.depth + 1
                     ))
-    
+
     def actions(self):
-        """Returns all the action of the ancestor states"""
-        return tuple(node.action for node in self.iterate_ancestors())[-2::-1]
-    
+        """retourner tout les etats"""
+        return tuple(node.action for node in self.iterer_precedeurs())[-2::-1]
+
     def is_goal(self):
-        """Checks if current state is equal to the goal state"""
         return self.state == self.goal
-    
+
     def __lt__(self, other):
-        """Checks if cost of current state is less than the cost of the other state"""
         return self.cost() < other.cost()
-    
+
     def __eq__(self, other):
-        """Checks if cost of current state is equal to the cost of the other state"""
+        """verification du cout en utilisant cost"""
         return self.cost() == other.cost()
-    
+
     def __str__(self):
-        """Returns the string representation of the state"""
+        """representation de letat"""
         return Board.draw(self.state)
-    
+
     def __repr__(self):
-        """Returns the actual representation of the state"""
         return f'Board(state={self.state}, action={self.action}, depth={self.depth})'
 
-def A_STAR(start_node):
-    """Returns the goal node"""
-    frontier = []
+
+def A_STAR(node_depart):
+    Board.algo_utilisee = "F"
+    ouvert = []
     explored_nodes = set()
     nodes_expanded = 0
-    max_search_depth = 0
-    
-    heapq.heappush(frontier, start_node)
-    
-    while frontier:
-        node = heapq.heappop(frontier)
+    distance_traversee_max = 0
+
+    heapq.heappush(ouvert, node_depart)
+
+    while ouvert:
+        node = heapq.heappop(ouvert)
         explored_nodes.add(node.state)
-        
+
         if node.is_goal():
-            return node, nodes_expanded, max_search_depth
-        
+            return node, nodes_expanded, distance_traversee_max
+
         node.expand()
         nodes_expanded += 1
-        
-        for neighbor in node.nodes:
-            if neighbor.state not in explored_nodes:
-                heapq.heappush(frontier, neighbor)
-                explored_nodes.add(neighbor.state)
-                
-                if neighbor.depth > max_search_depth:
-                    max_search_depth = neighbor.depth
-    
+
+        for voisin in node.nodes:
+            if voisin.state not in explored_nodes:
+                heapq.heappush(ouvert, voisin)
+                explored_nodes.add(voisin.state)
+
+                if voisin.depth > distance_traversee_max:
+                    distance_traversee_max = voisin.depth
+
     return None
 
-def BFS(start_node):
+def BEST_FIRST(node_depart):
     """Returns the goal node"""
-    frontier = deque()
-    explored_nodes = set()
+    Board.algo_utilisee = "H"
+    ouvert = []
+    fermee = set()
     nodes_expanded = 0
-    max_search_depth = 0
-    
-    frontier.append(start_node)
-    
-    while frontier:
-        node = frontier.popleft()
-        explored_nodes.add(node.state)
-        
+    distance_traversee = 0
+
+    heapq.heappush(ouvert, node_depart)
+
+    while ouvert:
+        node = heapq.heappop(ouvert)
+        fermee.add(node.state)
         if node.is_goal():
-            return node, nodes_expanded, max_search_depth
-        
+            return node, nodes_expanded, distance_traversee
         node.expand()
         nodes_expanded += 1
-        
-        for neighbor in node.nodes:
-            if neighbor.state not in explored_nodes:
-                frontier.append(neighbor)
-                explored_nodes.add(neighbor.state)
-                
-                if neighbor.depth > max_search_depth:
-                    max_search_depth = neighbor.depth
-    
+        for voisin in node.nodes:
+            if voisin.state not in fermee:
+                heapq.heappush(ouvert, voisin)
+                fermee.add(voisin.state)
+
+                if voisin.depth > distance_traversee:
+                    distance_traversee = voisin.depth
     return None
+
+
+
+def HC(node_depart):
+    Board.algo_utilisee = "H"
+    ouvert = []
+    fermee = set()
+    nodes_expanded = 0
+    distance_traversee = 0
+
+    heapq.heappush(ouvert, node_depart)
+    closest = 100
+    while ouvert:
+        node = heapq.heappop(ouvert)
+        fermee.add(node.state)
+        if node.is_goal() :
+            print("FOUND")
+            return node, nodes_expanded, distance_traversee
+        node.expand()
+        nodes_expanded += 1
+    # Evaluate neighbors and add only the best one with the lowest cost
+        best_neighbor = node
+        best_neighbor_cost = 1000  # Initialize with positive infinity
+        
+        for voisin in node.nodes:
+            if voisin.state not in fermee:
+                neighbor_cost = voisin.cost()  # Evaluate neighbor's cost
+                if neighbor_cost < best_neighbor_cost:  # Check for lower cost
+                    best_neighbor = voisin
+                    best_neighbor_cost = neighbor_cost
+                    if closest> best_neighbor_cost:
+                        closest = best_neighbor_cost
+        if best_neighbor_cost == 1000:
+            print("closest:",closest)
+            return node, nodes_expanded, distance_traversee
+        heapq.heappush(ouvert, best_neighbor)
+        fermee.add(best_neighbor.state)
+
+
+        if voisin.depth > distance_traversee:
+            distance_traversee = best_neighbor.depth
+
+    return None  # No solution found
+
 
 if __name__ == '__main__':
     # start state
-    start_state = Board.create_solvable_state() #(8, 6, 7, 2, 5, 4, 3, 0, 1)
+    start_state = Board.create_solvable_state()
     print('Start state:')
     print(Board.draw(start_state))
-    
+
+    # solved using HC
+    print('\nFinding solution...')
+    path_to_goal, nodes_expanded, max_search_depth, time_elasped = Board.solve(start_state, BEST_FIRST)
+
+    print(f'Done in {round(time_elasped, 4)} second(s) with {len(path_to_goal)} moves using BEST_FIRST')
+    print(f'Has a max search depth of {max_search_depth} and nodes expanded of {nodes_expanded}')
+    print('Actions:', *path_to_goal)
+
     # solved using A*
     print('\nFinding solution...')
     path_to_goal, nodes_expanded, max_search_depth, time_elasped = Board.solve(start_state, A_STAR)
-    
+
     print(f'Done in {round(time_elasped, 4)} second(s) with {len(path_to_goal)} moves using A*')
     print(f'Has a max search depth of {max_search_depth} and nodes expanded of {nodes_expanded}')
     print('Actions:', *path_to_goal)
-    
-    # solved using BFS
+    # solved using hc
     print('\nFinding solution...')
-    path_to_goal, nodes_expanded, max_search_depth, time_elasped = Board.solve(start_state, BFS)
-    
-    print(f'Done in {round(time_elasped, 4)} second(s) with {len(path_to_goal)} moves using BFS')
+    path_to_goal, nodes_expanded, max_search_depth, time_elasped = Board.solve(start_state, HC)
+    print(f'Done in {round(time_elasped, 4)} second(s) with {len(path_to_goal)} moves using HCL')
     print(f'Has a max search depth of {max_search_depth} and nodes expanded of {nodes_expanded}')
     print('Actions:', *path_to_goal)
